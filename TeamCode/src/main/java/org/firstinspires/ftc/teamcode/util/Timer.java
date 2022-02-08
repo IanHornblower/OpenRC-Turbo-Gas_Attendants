@@ -11,6 +11,10 @@ public class Timer {
     public void addSeconds(double seconds) {
         startTime = startTime-(long)(seconds*1e+9);
     }
+    
+    public void removeSeconds(double seconds) {
+        startTime = startTime+(long)(seconds*1e+9);
+    }
 
     public void start() {
         startTime = (long) (System.nanoTime());
