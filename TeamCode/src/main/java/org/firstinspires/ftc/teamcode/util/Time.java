@@ -4,6 +4,8 @@ import org.firstinspires.ftc.teamcode.control.Executor;
 
 import static org.firstinspires.ftc.teamcode.util.Init.init;
 
+import javax.crypto.spec.OAEPParameterSpec;
+
 public class Time {
     static double startTime = 0;
     static double currentTime = 0;
@@ -80,12 +82,9 @@ public class Time {
      */
 
     public static void timeout(double mills, Executor x) throws InterruptedException {
-        init(()-> startTime = System.nanoTime());
-
-        while(timeSinceStart < mills*1e6) {
-            currentTime = System.nanoTime();
-            timeSinceStart = currentTime - startTime;
-
+        Timer time = new Timer();
+        time.start();
+        while(time.currentMills() < mills) {
             x.method();
         }
     }
@@ -97,22 +96,17 @@ public class Time {
      */
 
     public static void asyncTimeout(double mills, Executor x) throws InterruptedException {
-        init(()-> startTime = System.nanoTime());
-
-        Thread t1 = new Thread(() -> {
-            while(timeSinceStart < mills*1e6) {
-                currentTime = System.nanoTime();
-                timeSinceStart = currentTime - startTime;
-
+        new Thread(()-> {
+            Timer time = new Timer();
+            time.start();
+            while(time.currentMills() < mills) {
                 try {
                     x.method();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-        });
-
-        t1.start();
+        }).start();
     }
 
     /**
@@ -133,6 +127,5 @@ public class Time {
 
         return false;
     }
-
 
 }

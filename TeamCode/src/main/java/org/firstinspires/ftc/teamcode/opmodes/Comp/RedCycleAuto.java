@@ -4,6 +4,7 @@ import static org.firstinspires.ftc.teamcode.hardware.lift.LIFT.D1;
 import static org.firstinspires.ftc.teamcode.hardware.lift.LIFT.D2;
 import static org.firstinspires.ftc.teamcode.hardware.lift.LIFT.D3;
 import static org.firstinspires.ftc.teamcode.util.Time.await;
+import static org.firstinspires.ftc.teamcode.util.Time.timeout;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -25,18 +26,24 @@ import org.firstinspires.ftc.teamcode.vision.FreightFrenzyCamera;
 @Autonomous(name = "Red Cycle Auto", group = "Comp")
 public class RedCycleAuto extends LinearOpMode {
 
+    enum ElementPosition {
+        LEFT, MIDDLE, RIGHT, NONE
+    }
+
     @Override
     public void runOpMode() throws InterruptedException {
-        lift.LIFT pos = D1;
+        telemetry.addLine("Starting Hardware Map & Camera");
+        telemetry.update();
+
+        // Init
 
         Robot robot = new Robot(hardwareMap);
         CornettCore motionProfile = new CornettCore(robot);
         FreightFrenzyCamera camera = new FreightFrenzyCamera(hardwareMap);
+        Timer runTime = new Timer();
+        robot.lift.primeServo();
 
-        robot.setSTART_POSITION(new Pose2D(63, 13, AngleUtil.interpretAngle(0)));
-
-        telemetry.addLine("Starting Hardware Map & Camera");
-        telemetry.update();
+        robot.setSTART_POSITION(AutonomousConstants.RedConstants.Warehouse.START_POSITION);
 
         camera.initWebCamera();
         camera.initPipeline();
@@ -45,16 +52,20 @@ public class RedCycleAuto extends LinearOpMode {
         camera.startCameraStream(0);
         CameraStreamServer.getInstance().setSource(camera.getCamera());
 
-        robot.lift.primeServo();
+        // Loop while waiting for Start
+
+        ElementPosition state = null;
 
         while(!isStarted()) {
             switch (camera.determinePosition()) {
                 case A:
-                    pos = D1;
+                    state = ElementPosition.LEFT;
                 case B:
-                    pos = D2;
+                    state = ElementPosition.MIDDLE;
                 case C:
-                    pos = D3;
+                    state = ElementPosition.RIGHT;
+                default:
+                    state = ElementPosition.MIDDLE;  // May Switch later this is the easiest
             }
 
             telemetry.clear();
@@ -72,58 +83,55 @@ public class RedCycleAuto extends LinearOpMode {
         telemetry.update();
         waitForStart();
 
-        camera.shutdownPipeline();
+        runTime.start();
 
         while(opModeIsActive() && !isStopRequested()) {
+
+            // TESTING LEFT
+            state = ElementPosition.LEFT;
+
             /*
-             * Run Auto
+             * Run Auto -- SPLIT CODE LATER
              */
 
             await(200, ()-> robot.intakeSys.regularFreightIntake());
 
-            //Trajectory toPlate = new Trajectory(robot, robot.START_POSITION);
+            //await(400, ()->robot.lift.SyncSetPosition(lift.liftOne));
+            motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.SHIPPING_HUB_LEVEL_ONE, 1);
 
-            //toPlate.addWaypoint(new Point(55.333333333333336, 13.11111111111111));
-            //toPlate.addWaypoint(new Point(48, -5));
-            //toPlate.addWaypoint(new Point(47, -5));
 
-            //toPlate.followPath(Trajectory.PATH_TYPE.PURE_PURSUIT, CornettCore.DIRECTION.BACKWARD, 6, 1);
+            //robot.lift.drop();
+            //sleep(1500);
 
-            Timer plate = new Timer();
-            plate.start();
-            while(plate.currentSeconds() < 2.0) {
-                motionProfile.runToPositionSync(45, -5, Math.toRadians(15), 1);
-            }
+            //robot.lift.primeServo();
+            //await(300, ()->robot.lift.startServo());
 
-            switch (camera.determinePosition()) {
-                case A:
-                    robot.lift.SyncSetPosition(350);
-                    break;
-                case B:
-                    robot.lift.SyncSetPosition(600);
-                    break;
-                case C:
-                    robot.lift.SyncSetPosition(1050);
-                    break;
-            }
+            //robot.lift.setPosition(lift.liftStart);
 
-            robot.lift.drop();
-            sleep(1500);
 
-            robot.lift.primeServo();
-            await(300, ()->robot.lift.startServo());
-
-            robot.lift.setPosition(lift.liftStart);
 
             // Start
 
-            motionProfile.runToPositionSync(62, 7, Math.toRadians(90), 1);
+
+
+            motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.WAREHOUSE_WALL, 1);
 
             robot.DriveTrain.setMotorPowers(1, 0, 0);
-            sleep(500);
+            sleep(200);
             robot.stopDrive();
 
-            robot.intakeSys.setIntakePower(-0.8);
+            robot.intakeSys.setIntakePower(0.9);
+
+            while(!robot.freightDetector.hasFreight()) {
+                robot.DriveTrain.setMotorPowers(0, 0.7, 0);
+            }
+            robot.DriveTrain.stopDrive();
+
+            motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.WAREHOUSE_WALL, 1);
+
+            motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.SHIPPING_HUB_LEVEL_THREE, 1);
+
+            /*
 
             Pose2D run1 = robot.pos;
 
@@ -136,6 +144,11 @@ public class RedCycleAuto extends LinearOpMode {
 
             robot.intakeSys.setIntakePower(0.0);
 
+            // Done
+
+
+             */
+            camera.shutdownPipeline();
             stop();
         }
     }

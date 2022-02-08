@@ -98,6 +98,7 @@ public class Robot extends OpMode {
 
         intake = hardwareMap.dcMotor.get("intake");
         intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        intake.setDirection(DcMotorSimple.Direction.REVERSE);
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         intakeServo = hardwareMap.servo.get("intakeServo");

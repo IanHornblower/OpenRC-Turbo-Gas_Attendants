@@ -3,8 +3,12 @@ package org.firstinspires.ftc.teamcode.opmodes.Comp;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.arcrobotics.ftclib.gamepad.GamepadEx;
+import com.arcrobotics.ftclib.gamepad.GamepadKeys;
+import com.arcrobotics.ftclib.gamepad.TriggerReader;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -38,6 +42,8 @@ import org.firstinspires.ftc.teamcode.util.Timer;
 @TeleOp(name = "TeleOp", group = "Comp")
 public class TeleOperation extends LinearOpMode {
 
+    double turn = 0;
+
     public static double movementSens = 1;
     public static double turnSens = 0.5;
 
@@ -46,23 +52,11 @@ public class TeleOperation extends LinearOpMode {
 
     public static double position = liftStart;
     public static boolean dashboard = true;
-    boolean down = true;
-    boolean isMoving = false;
-    boolean intakeDown = false;
 
     private enum DRIVE {
         FIELD,
         ROBOT
     }
-
-    private enum Speed {
-        SLOW,
-        REGULAR,
-        FAST
-    }
-
-    Speed speed = Speed.REGULAR;
-    double turn = 0;
 
     public static enum LIFTSTATE {
         START,
@@ -109,10 +103,11 @@ public class TeleOperation extends LinearOpMode {
 
         runTime.start();
 
-        //runTime.addSeconds(0);
+        GamepadEx Driver = new GamepadEx(gamepad1);
+        GamepadEx Operator = new GamepadEx(gamepad2);
 
         while(opModeIsActive()) {
-            Thread t1 = new Thread(() -> {
+            Thread loop = new Thread(() -> {
                 switch (lift[0]) {
                     case ONE:
                         sleep(200);
@@ -132,9 +127,8 @@ public class TeleOperation extends LinearOpMode {
                 }
             });
 
-            t1.start();
-
-            robot.updateOdometry();
+            loop.start();
+            robot.intakeSys.update();
 
             // Drive Train
 
@@ -151,45 +145,37 @@ public class TeleOperation extends LinearOpMode {
                 if(gamepad1.triangle) driveState = DRIVE.FIELD;
             }
 
-            isMoving = leftX > 0.1 || leftY > 0.1;
-
-            if(gamepad1.cross) {
-                movementSens = 0.78;
-                turnSens = 0.59;
-                speed = Speed.REGULAR;
-            }
-
-            if(gamepad1.circle) {
-                movementSens = slowed_movementSens;
-                turnSens = slowed_turnSens;
-                speed = Speed.SLOW;
-            }
-
             // Duck Motor
             robot.spinMotor.run(gamepad2.left_bumper, gamepad2.right_bumper);
 
             // Intake
 
             if(gamepad2.dpad_down)  {
-                intakeDown = true;
-                robot.intakeSys.regularFreightIntake();
+                robot.getIntakeServo().setPosition(0.4);
             }
 
             if(gamepad2.dpad_up) {
-                intakeDown = false;
-                robot.intakeSys.raiseIntake();
+                robot.getIntakeServo().setPosition(0.0);
             }
 
-            if(gamepad1.dpad_left || gamepad1.dpad_right) robot.intakeSys.inAirIntake();
+            TriggerReader intakeIn = new TriggerReader(Operator, GamepadKeys.Trigger.RIGHT_TRIGGER);
+            TriggerReader intakeOut = new TriggerReader(Operator, GamepadKeys.Trigger.LEFT_TRIGGER);
 
-            robot.intakeSys.run(gamepad2.left_trigger, gamepad2.right_trigger, down);
+            if(intakeIn.isDown()) {
+                robot.intakeSys.setState(intake.IntakeState.IN);
+            }
+            else if(intakeOut.isDown()) {
+                robot.intakeSys.setState(intake.IntakeState.OUT);
+            }
+            else {
+                robot.intakeSys.setState(intake.IntakeState.OFF);
+            }
 
             // Lift
 
             robot.lift.setPosition(position);
 
-            if(gamepad2.square && !isMoving && intakeDown) {
-                down = false;
+            if(gamepad2.square && robot.intakeSys.isDown()) {
                 if (lift[0] == LIFTSTATE.ONE) {
                     position = liftOne;
                     robot.lift.primeServo();
@@ -202,18 +188,16 @@ public class TeleOperation extends LinearOpMode {
                 }
             }
 
-            if(gamepad2.circle && !down && !isMoving) {
+            if(gamepad2.circle && !robot.lift.isDown()) {
                 robot.lift.drop();
             }
 
-            if(gamepad2.triangle && !isMoving && intakeDown) {
-                down = false;
+            if(gamepad2.triangle && robot.intakeSys.isDown()) {
                 position = liftThree;
                 robot.lift.primeServo();
             }
 
-            if(gamepad2.cross && intakeDown) {
-                down = true;
+            if(gamepad2.cross && robot.intakeSys.isDown()) {
                 robot.lift.startServo();
                 position = liftStart;
             }

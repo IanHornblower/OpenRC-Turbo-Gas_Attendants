@@ -122,8 +122,6 @@ public class TestTeleOp extends LinearOpMode {
                 robot.freightDetector.close();
             }
 
-            robot.intakeSys.run(gamepad2.left_trigger, gamepad2.right_trigger, true);
-
 
             //telemetry.addData("\nXYH", robot.pos.toString());
             telemetry.addData("Left", robot.getLeftEncoder().getCurrentPosition());

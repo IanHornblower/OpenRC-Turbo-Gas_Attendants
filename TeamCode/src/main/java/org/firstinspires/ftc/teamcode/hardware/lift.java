@@ -126,6 +126,10 @@ public class lift {
         robot.getLift().setPower(0.0);
     }
 
+    public boolean isDown() {
+        return robot.getLift().getCurrentPosition() < 150;
+    }
+
     public void prime() throws InterruptedException {
         if (liftState == LIFT.START) {
             setPosition(liftPrimed);

@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.PIDCoefficients;
 import org.firstinspires.ftc.teamcode.hardware.Robot;
 import org.firstinspires.ftc.teamcode.math.Curve;
 import org.firstinspires.ftc.teamcode.math.Point;
+import org.firstinspires.ftc.teamcode.math.Pose2D;
 import org.firstinspires.ftc.teamcode.util.AngleUtil;
 import org.firstinspires.ftc.teamcode.util.MiniPID;
 
@@ -182,6 +183,10 @@ public class CornettCore extends OpMode {
                 x, y, heading, allowableDistanceError,
                 defaultXPID, defaultYPID, defaultHeadingPID,
                 defaultXControlPointMultiplier, defaultYControlPointMultiplier, defaultHeadingControlPointMultiplier);
+    }
+
+    public synchronized void runToPositionSync(Pose2D pos, double error) throws InterruptedException {
+        runToPositionSync(pos.x, pos.y, pos.heading, error);
     }
 
     double t = 0, f = 0;
