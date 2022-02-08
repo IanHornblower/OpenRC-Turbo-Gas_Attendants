@@ -174,8 +174,41 @@ public class CornettCore extends OpMode {
                     x, y, heading,
                     xPID, yPID, headingPID,
                     xControlPointMultiplier, yControlPointMultiplier, headingControlPointMultiplier);
-        } while(distance > allowableDistanceError); //  ||  angleDistance > Math.toRadians(allowableDistanceError));4
+        } while(distance > allowableDistanceError); //  ||  angleDistance > Math.toRadians(allowableDistanceError));
         robot.DriveTrain.stopDrive();
+    }
+    
+    /**
+        @time in Milliseconds
+    */
+    
+    public synchronized void runToPositionSyncRaw(double x, double y, double heading, 
+                                                  double time, double allowableDistanceError) throws InterruptedException {
+        Timer time = new Timer();
+        time.start();
+        distance = robot.pos.getDistanceFrom(new Point(x, y));
+        angleDistance = Curve.getShortestDistance(heading, robot.pos.getHeading());
+        do {
+            robot.updateOdometry();
+            distance = robot.pos.getDistanceFrom(new Point(x, y));
+            angleDistance = Curve.getShortestDistance(heading, robot.pos.getHeading());
+            runToPositionRaw(
+                    x, y, heading,
+                    xPID, yPID, headingPID,
+                    xControlPointMultiplier, yControlPointMultiplier, headingControlPointMultiplier);
+        } while(distance > allowableDistanceError && time.getCurrentMills() < time);
+        robot.DriveTrain.stopDrive();
+    }
+    
+    public synchronized void runToPositionSync(double x, double y, double heading, double time, double allowableDistanceError) throws InterruptedException {
+        runToPositionSyncRaw(
+                x, y, heading, 
+                time, allowableDistanceError);
+    }
+    
+    
+    public synchronized void runToPositionSync(Pose2D pos, double time, double error) throws InterruptedException {
+        runToPositionSync(pos.x, pos.y, pos.heading, time, error);
     }
 
     public synchronized void runToPositionSync(double x, double y, double heading, double allowableDistanceError) throws InterruptedException {
@@ -184,6 +217,8 @@ public class CornettCore extends OpMode {
                 defaultXPID, defaultYPID, defaultHeadingPID,
                 defaultXControlPointMultiplier, defaultYControlPointMultiplier, defaultHeadingControlPointMultiplier);
     }
+    
+    
 
     public synchronized void runToPositionSync(Pose2D pos, double error) throws InterruptedException {
         runToPositionSync(pos.x, pos.y, pos.heading, error);
