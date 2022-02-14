@@ -17,7 +17,7 @@ public class Field {
     int strokeWidth = 1;
 
     // Standard Robot
-    double robotWidth = 13;
+    double robotWidth = 10;
     double robotHeight = 18;
 
     // Circular Robot

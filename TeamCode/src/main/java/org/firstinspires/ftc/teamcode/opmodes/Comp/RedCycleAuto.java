@@ -6,10 +6,12 @@ import static org.firstinspires.ftc.teamcode.hardware.lift.LIFT.D3;
 import static org.firstinspires.ftc.teamcode.util.Time.await;
 import static org.firstinspires.ftc.teamcode.util.Time.timeout;
 
+import com.arcrobotics.ftclib.util.Timing;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.checkerframework.checker.units.UnitsTools;
 import org.firstinspires.ftc.robotcore.external.stream.CameraStreamServer;
 import org.firstinspires.ftc.teamcode.PoseStorage;
 import org.firstinspires.ftc.teamcode.control.CornettCore;
@@ -23,12 +25,16 @@ import org.firstinspires.ftc.teamcode.util.AngleUtil;
 import org.firstinspires.ftc.teamcode.util.Timer;
 import org.firstinspires.ftc.teamcode.vision.FreightFrenzyCamera;
 
+import java.util.concurrent.TimeUnit;
+
 @Autonomous(name = "Red Cycle Auto", group = "Comp")
 public class RedCycleAuto extends LinearOpMode {
 
     enum ElementPosition {
         LEFT, MIDDLE, RIGHT, NONE
     }
+
+    boolean runTwice = false;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -96,60 +102,241 @@ public class RedCycleAuto extends LinearOpMode {
 
             await(200, ()-> robot.intakeSys.regularFreightIntake());
 
-            //await(400, ()->robot.lift.SyncSetPosition(lift.liftOne));
-            motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.SHIPPING_HUB_LEVEL_ONE, 1);
+            await(400, ()->robot.lift.SyncSetPosition(lift.liftOne));
 
+            //Timing.Timer joe = new Timing.Timer(2);
+            //joe.start();
 
-            //robot.lift.drop();
-            //sleep(1500);
+            motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.SHIPPING_HUB_LEVEL_ONE, 1300, 1);
 
-            //robot.lift.primeServo();
-            //await(300, ()->robot.lift.startServo());
+            robot.lift.drop();
+            sleep(1500);
 
-            //robot.lift.setPosition(lift.liftStart);
+            robot.lift.primeServo();
 
+            if(robot.freightDetector.hasFreight()) { // If the block gets stuck drop it again
+                runTwice = true;
+                robot.lift.drop();
+                sleep(2000);
 
+                robot.lift.primeServo();
+            }
 
-            // Start
+            await(300, ()->robot.lift.startServo());
 
+            robot.lift.setPosition(lift.liftStart);
 
+            // Cycle 1 //
 
-            motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.WAREHOUSE_WALL, 1);
+            // Run into wall
+            motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.WAREHOUSE_WALL, 1000, 1);
 
-            robot.DriveTrain.setMotorPowers(1, 0, 0);
-            sleep(200);
-            robot.stopDrive();
+            runInRelation(robot, 1, 0, 0, 500);
+
+            // Start Intake Loop
 
             robot.intakeSys.setIntakePower(0.9);
 
+            double currentY = robot.pos.y;
+
+            while(robot.pos.y < currentY + AutonomousConstants.RedConstants.Warehouse.DISTANCE_BLIND) {
+                robot.updateOdometry();
+                robot.DriveTrain.setMotorPowers(0.3, 1, 0);
+            }
+            robot.stopDrive();
+
             while(!robot.freightDetector.hasFreight()) {
-                robot.DriveTrain.setMotorPowers(0, 0.7, 0);
+                robot.updateOdometry();
+                robot.DriveTrain.setMotorPowers(0, 0.5, 0);
             }
             robot.DriveTrain.stopDrive();
 
-            motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.WAREHOUSE_WALL, 1);
-
-            motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.SHIPPING_HUB_LEVEL_THREE, 1);
-
-            /*
-
-            Pose2D run1 = robot.pos;
-
-            Trajectory run1Traj = new Trajectory(robot, run1);
-            run1Traj.addWaypoint(new Point(run1.x+5, run1.y+40));
-
-            run1Traj.followPath(Trajectory.PATH_TYPE.PURE_PURSUIT, CornettCore.DIRECTION.FORWARD, 8, 1);
-
-
+            robot.lift.primeServo();
 
             robot.intakeSys.setIntakePower(0.0);
 
-            // Done
+            runInRelation(robot, 0.6, 0, 0, 800);
 
+            await(200, ()-> robot.intakeSys.setIntakePower(-0.9));
 
-             */
+            robot.lift.setPosition(lift.liftOne);
+
+            while(robot.pos.y > AutonomousConstants.RedConstants.Warehouse.RETURN_DISTANCE_MIN) {
+                robot.updateOdometry();
+                robot.DriveTrain.setMotorPowers(0.3 , -1, 0);
+            }
+            robot.stopDrive();
+
+            robot.intakeSys.setIntakePower(0.0);
+
+            // End Loop
+
+            //motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.WAREHOUSE_WALL, 1);
+
+            await(400, ()->robot.lift.SyncSetPosition(lift.liftThree));
+
+            motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.SHIPPING_HUB_LEVEL_THREE, 1300, 1);
+
+            robot.lift.drop();
+            sleep(1500);
+
+            robot.lift.primeServo();
+            await(300, ()->robot.lift.startServo());
+
+            robot.lift.setPosition(lift.liftStart);
+
+            // Loop Again
+
+            // Start
+            motionProfile.runToPositionSync(new Pose2D(64.5, 3, Math.toRadians(90)), 1500, 1);
+
+            runInRelation(robot, 1, 0, 0, 800);
+
+            // Start Intake Loop
+
+            robot.intakeSys.setIntakePower(0.9);
+
+            currentY = robot.pos.y;
+
+            while(robot.pos.y < currentY + AutonomousConstants.RedConstants.Warehouse.DISTANCE_BLIND) {
+                robot.updateOdometry();
+                robot.DriveTrain.setMotorPowers(0.3, 1, 0);
+            }
+            robot.stopDrive();
+
+            while(!robot.freightDetector.hasFreight()) {
+                robot.updateOdometry();
+                robot.DriveTrain.setMotorPowers(0, 0.5, 0);
+            }
+            robot.DriveTrain.stopDrive();
+
+            robot.lift.primeServo();
+
+            robot.intakeSys.setIntakePower(0.0);
+
+            runInRelation(robot, 0.6, 0, 0, 800);
+
+            await(200, ()-> robot.intakeSys.setIntakePower(-0.9));
+
+            robot.lift.setPosition(lift.liftOne);
+
+            while(robot.pos.y > AutonomousConstants.RedConstants.Warehouse.RETURN_DISTANCE_MIN) {
+                robot.updateOdometry();
+                robot.DriveTrain.setMotorPowers(0.3 , -1, 0);
+            }
+            robot.stopDrive();
+
+            robot.intakeSys.setIntakePower(0.0);
+
+            // End Loop
+
+            //motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.WAREHOUSE_WALL, 1);
+
+            await(400, ()->robot.lift.SyncSetPosition(lift.liftThree));
+
+            motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.SHIPPING_HUB_LEVEL_THREE, 1300, 1);
+
+            robot.lift.drop();
+            sleep(1500);
+
+            robot.lift.primeServo();
+            await(300, ()->robot.lift.startServo());
+
+            robot.lift.setPosition(lift.liftStart);
+
+            if(runTime.currentSeconds() > 22) {
+                runTwice = true;
+            }
+
+            if(!runTwice) {
+                // Loop Again 3rd Time //
+
+                // Start
+                motionProfile.runToPositionSync(new Pose2D(64.5, 3, Math.toRadians(90)), 1500, 1);
+
+                runInRelation(robot, 1, 0, 0, 800);
+
+                // Start Intake Loop
+
+                robot.intakeSys.setIntakePower(0.9);
+
+                currentY = robot.pos.y;
+
+                while(robot.pos.y < currentY + AutonomousConstants.RedConstants.Warehouse.DISTANCE_BLIND) {
+                    robot.updateOdometry();
+                    robot.DriveTrain.setMotorPowers(0.3, 1, 0);
+                }
+                robot.stopDrive();
+
+                while(!robot.freightDetector.hasFreight()) {
+                    robot.updateOdometry();
+                    robot.DriveTrain.setMotorPowers(0, 0.3, 0);
+                }
+                robot.DriveTrain.stopDrive();
+
+                robot.lift.primeServo();
+
+                robot.intakeSys.setIntakePower(0.0);
+
+                runInRelation(robot, 0.6, 0, 0, 800);
+
+                await(200, ()-> robot.intakeSys.setIntakePower(-0.9));
+
+                robot.lift.setPosition(lift.liftOne);
+
+                while(robot.pos.y > AutonomousConstants.RedConstants.Warehouse.RETURN_DISTANCE_MIN) {
+                    robot.updateOdometry();
+                    robot.DriveTrain.setMotorPowers(0.3 , -1, 0);
+                }
+                robot.stopDrive();
+
+                robot.intakeSys.setIntakePower(0.0);
+
+                // End Loop
+
+                //motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.WAREHOUSE_WALL, 1);
+
+                await(400, ()->robot.lift.SyncSetPosition(lift.liftThree));
+
+                motionProfile.runToPositionSync(new Pose2D(44, -5, Math.toRadians(5)), 1500, 1);
+
+                robot.lift.drop();
+                sleep(1500);
+
+                robot.lift.primeServo();
+                await(300, ()->robot.lift.startServo());
+
+                robot.lift.setPosition(lift.liftStart);
+            }
+
+            //////////////// PARK /////////////
+
+            motionProfile.runToPositionSync(new Pose2D(65.5, 0, Math.toRadians(100)), 800, 0.1);
+
+            runInRelation(robot, 1, 0, 0, 300);
+
+            currentY = robot.pos.y;
+
+            while(robot.pos.y < currentY + AutonomousConstants.RedConstants.Warehouse.DISTANCE_BLIND-10) {
+                robot.updateOdometry();
+                robot.DriveTrain.setMotorPowers(0.3, 1, 0);
+            }
+            robot.DriveTrain.stopDrive();
+
             camera.shutdownPipeline();
             stop();
         }
+
+
+    }
+
+    public void runInRelation(Robot robot, double x, double y, double t, double time) {
+        Timing.Timer timer = new Timing.Timer((long)time, TimeUnit.MILLISECONDS);
+        timer.start();
+        while(!timer.done()) {
+            robot.updateOdometry();
+            robot.DriveTrain.setMotorPowers(x, y, t);
+        }
+        robot.stopDrive();
     }
 }

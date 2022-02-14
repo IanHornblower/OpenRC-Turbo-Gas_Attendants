@@ -45,7 +45,7 @@ public class TeleOperation extends LinearOpMode {
     double turn = 0;
 
     public static double movementSens = 1;
-    public static double turnSens = 0.5;
+    public static double turnSens = 0.8;
 
     public static double slowed_movementSens = 0.41;
     public static double slowed_turnSens = 0.29;
@@ -103,6 +103,8 @@ public class TeleOperation extends LinearOpMode {
 
         runTime.start();
 
+        runTime.addSeconds(65);
+
         GamepadEx Driver = new GamepadEx(gamepad1);
         GamepadEx Operator = new GamepadEx(gamepad2);
 
@@ -135,6 +137,14 @@ public class TeleOperation extends LinearOpMode {
             double leftX = AngleUtil.powRetainingSign(Controller.deadZone(gamepad1.left_stick_x, 0.1), LEFT_TRIGGER_X_POW);
             double leftY = AngleUtil.powRetainingSign(Controller.deadZone(-gamepad1.left_stick_y, 0.1), LEFT_TRIGGER_Y_POW);
             turn = Controller.deadZone(gamepad1.right_stick_x, 0.1);
+
+            if(gamepad1.left_trigger > 0.1) {
+                leftX += gamepad1.left_trigger;
+            }
+
+            if(gamepad1.right_trigger > 0.1) {
+                leftX -= gamepad1.left_trigger;
+            }
 
             if(driveState == DRIVE.FIELD) {
                 robot.DriveTrain.driveFieldCentric(leftX, leftY, turn, modTheta);
@@ -206,8 +216,8 @@ public class TeleOperation extends LinearOpMode {
 
             if (runTime.currentSeconds() > 75 && runTime.currentSeconds() < 90) {  /// 75 -> 90
                 FreightDetector.isRunning = false;
-                gamepad1.rumble(8*1000);
-                gamepad2.rumble(8*1000);
+                gamepad1.rumble(100);
+                gamepad2.rumble(100);
                 Blinkin.Driver.setPattern(RevBlinkinLedDriver.BlinkinPattern.CP1_LARSON_SCANNER);
             }
             else if (runTime.currentSeconds() > 90 && runTime.currentSeconds() < 110) {  // 90 -> 110

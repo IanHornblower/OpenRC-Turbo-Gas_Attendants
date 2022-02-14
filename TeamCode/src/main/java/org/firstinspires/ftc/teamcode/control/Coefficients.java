@@ -21,7 +21,7 @@ public class Coefficients {
 
     public AngleController turn = new AngleController(turnPIDBasic);
 
-    public static double xKp = 0.1;
+    public static double xKp = 0.07;
     public static double xKi = 0;
     public static double xKd = 0;
     public static double xMaxIntegralSum = 0;
@@ -33,7 +33,7 @@ public class Coefficients {
 
     public PIDEx x = new PIDEx(xPID);
 
-    public static double yKp = 0.1;
+    public static double yKp = 0.07;
     public static double yKi = 0;
     public static double yKd = 0;
     public static double yMaxIntegralSum = 0;
@@ -45,7 +45,7 @@ public class Coefficients {
 
     public PIDEx y = new PIDEx(yPID);
 
-    public static double distanceKp = 0.1;
+    public static double distanceKp = 0.12;
     public static double distanceKi = 0;
     public static double distanceKd = 0;
     public static double distanceMaxIntegralSum = 0;

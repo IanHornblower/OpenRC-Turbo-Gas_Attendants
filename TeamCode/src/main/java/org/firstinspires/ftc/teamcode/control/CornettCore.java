@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.control;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.arcrobotics.ftclib.util.Timing;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.PIDCoefficients;
 
@@ -10,9 +11,12 @@ import org.firstinspires.ftc.teamcode.math.Point;
 import org.firstinspires.ftc.teamcode.math.Pose2D;
 import org.firstinspires.ftc.teamcode.util.AngleUtil;
 import org.firstinspires.ftc.teamcode.util.MiniPID;
+import org.firstinspires.ftc.teamcode.util.Timer;
 
 import static org.firstinspires.ftc.teamcode.control.Coefficients.*;
 import static org.firstinspires.ftc.teamcode.util.Init.init;
+
+import java.util.concurrent.TimeUnit;
 
 @Config
 public class CornettCore extends OpMode {
@@ -147,8 +151,8 @@ public class CornettCore extends OpMode {
         direction = Curve.getDirection(robot.pos.getHeading(), heading);
         turnPIDOutput = headingPID.getOutput(AngleUtil.deNormalizeAngle(robot.pos.getHeading()));
 
-        double xControlPoint = distancePID1 * xRawPower;
-        double yControlPoint = distancePID1 * yRawPower;
+        double xControlPoint = xPIDOutput;
+        double yControlPoint = yPIDOutput;
         double headingControlPoint = direction * turnPIDOutput;
 
         robot.DriveTrain.driveFieldCentric(xControlPoint, yControlPoint, headingControlPoint);
@@ -184,8 +188,8 @@ public class CornettCore extends OpMode {
     
     public synchronized void runToPositionSyncRaw(double x, double y, double heading, 
                                                   double time, double allowableDistanceError) throws InterruptedException {
-        Timer time = new Timer();
-        time.start();
+        Timing.Timer timer = new Timing.Timer((long)time, TimeUnit.MILLISECONDS);
+        timer.start();
         distance = robot.pos.getDistanceFrom(new Point(x, y));
         angleDistance = Curve.getShortestDistance(heading, robot.pos.getHeading());
         do {
@@ -193,10 +197,8 @@ public class CornettCore extends OpMode {
             distance = robot.pos.getDistanceFrom(new Point(x, y));
             angleDistance = Curve.getShortestDistance(heading, robot.pos.getHeading());
             runToPositionRaw(
-                    x, y, heading,
-                    xPID, yPID, headingPID,
-                    xControlPointMultiplier, yControlPointMultiplier, headingControlPointMultiplier);
-        } while(distance > allowableDistanceError && time.getCurrentMills() < time);
+                    x, y, heading, defaultXPID, defaultYPID, defaultHeadingPID, 1, 1, 1);
+        } while(distance > allowableDistanceError && !timer.done());
         robot.DriveTrain.stopDrive();
     }
     

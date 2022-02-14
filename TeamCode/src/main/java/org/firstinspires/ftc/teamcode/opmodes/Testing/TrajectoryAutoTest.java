@@ -16,7 +16,6 @@ import org.firstinspires.ftc.teamcode.math.Pose2D;
 import org.firstinspires.ftc.teamcode.util.AngleUtil;
 
 import java.util.ArrayList;
-@Disabled
 @Config
 @Autonomous(name = "Motion Profile Testing", group = "Traj")
 public class TrajectoryAutoTest extends LinearOpMode {
@@ -55,11 +54,16 @@ public class TrajectoryAutoTest extends LinearOpMode {
         while(opModeIsActive() && !isStopRequested()) {
             //motionProfile.runToPositionSync(24, 24, 0, 1);
 
-            joe.followPath(Trajectory.PATH_TYPE.PURE_PURSUIT, CornettCore.DIRECTION.FORWARD, 12, 1);
+            //joe.followPath(Trajectory.PATH_TYPE.PURE_PURSUIT, CornettCore.DIRECTION.FORWARD, 12, 1);
 
             //sleep(1000);
 
-            backJoe.followPath(Trajectory.PATH_TYPE.PURE_PURSUIT, CornettCore.DIRECTION.BACKWARD, 12, 1);
+            //backJoe.followPath(Trajectory.PATH_TYPE.PURE_PURSUIT, CornettCore.DIRECTION.BACKWARD, 12, 1);
+
+            motionProfile.runToPositionSync(100, 100, Math.toRadians(90), 500, 1);
+
+
+
 
             stop();
 

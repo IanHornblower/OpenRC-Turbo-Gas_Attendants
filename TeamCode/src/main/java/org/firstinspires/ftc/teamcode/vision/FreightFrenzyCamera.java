@@ -101,6 +101,10 @@ public class FreightFrenzyCamera {
         FtcDashboard.getInstance().startCameraStream(cam, fps);
     }
 
+    public void startBuiltInCamera(int fps) {
+        FtcDashboard.getInstance().startCameraStream(cam, fps);
+    }
+
     public position determinePosition() {
         if(pipeline.getRectArea() > lowestBlobArea){
             if(pipeline.getRectMidpointX() > bcVerticalLine){

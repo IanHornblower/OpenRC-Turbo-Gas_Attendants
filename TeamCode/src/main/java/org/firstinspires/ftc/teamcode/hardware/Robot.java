@@ -306,18 +306,16 @@ public class Robot extends OpMode {
         pos.y += dyTraveled;
         pos.heading += dtheta;
 
-        /*
         TelemetryPacket packet = new TelemetryPacket();
 
         Field field = new Field(packet);
-        field.createCircularRobot(this.pos);
+        field.createRobot(this.pos);
 
         packet = field.getPacket();
 
         packet.addLine("XYH: " + pos.toString());
 
         dashboard.sendTelemetryPacket(packet);
-        */
 
         oldRightPosition = currentRightPosition;
         oldLeftPosition = currentLeftPosition;

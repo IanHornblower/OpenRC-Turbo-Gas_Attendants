@@ -61,6 +61,10 @@ public class ContourPipeline extends OpenCvPipeline {
         this.CAMERA_HEIGHT = CAMERA_HEIGHT;
     }
 
+    public Mat getProccssed() {
+        return processed;
+    }
+
     public void ConfigureScalarLower(double Y, double Cr, double Cb) { scalarLowerYCrCb = new Scalar(Y, Cr, Cb); }
     public void ConfigureScalarUpper(double Y, double Cr, double Cb) { scalarUpperYCrCb = new Scalar(Y, Cr, Cb); }
     //public void ConfigureScalarLower(int Y, int Cr, int Cb) { scalarLowerYCrCb = new Scalar(Y, Cr, Cb); }
@@ -137,7 +141,8 @@ public class ContourPipeline extends OpenCvPipeline {
             error = true;
         }
 
-        return output;
+        // return output;
+        return processed;
     }
     public int getRectHeight(){return maxRect.height;}
     public int getRectWidth(){ return maxRect.width; }
