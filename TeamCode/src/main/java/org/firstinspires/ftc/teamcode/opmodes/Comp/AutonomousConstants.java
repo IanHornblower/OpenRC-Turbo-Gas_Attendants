@@ -13,7 +13,7 @@ public class AutonomousConstants {
             public static Pose2D SHIPPING_HUB_LEVEL_THREE = new Pose2D(44, -5, Math.toRadians(17));
 
             public static Pose2D WAREHOUSE_WALL = new Pose2D(64.5, 2, Math.toRadians(90));
-            public static double DISTANCE_BLIND = 32;
+            public static double DISTANCE_BLIND = 26;
             public static double RETURN_DISTANCE_MIN = 10;
 
         }

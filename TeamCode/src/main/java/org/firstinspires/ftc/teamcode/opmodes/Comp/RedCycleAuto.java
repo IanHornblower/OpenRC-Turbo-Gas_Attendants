@@ -248,7 +248,7 @@ public class RedCycleAuto extends LinearOpMode {
                 runTwice = true;
             }
 
-            if(!runTwice) {
+            if(!runTwice || runTwice) {
                 // Loop Again 3rd Time //
 
                 // Start
@@ -311,13 +311,13 @@ public class RedCycleAuto extends LinearOpMode {
 
             //////////////// PARK /////////////
 
-            motionProfile.runToPositionSync(new Pose2D(65.5, 0, Math.toRadians(100)), 800, 0.1);
+            motionProfile.runToPositionSync(new Pose2D(64.5, -8, Math.toRadians(80)), 1000, 0.1);
 
             runInRelation(robot, 1, 0, 0, 300);
 
             currentY = robot.pos.y;
 
-            while(robot.pos.y < currentY + AutonomousConstants.RedConstants.Warehouse.DISTANCE_BLIND-10) {
+            while(robot.pos.y < currentY + AutonomousConstants.RedConstants.Warehouse.DISTANCE_BLIND+5) {
                 robot.updateOdometry();
                 robot.DriveTrain.setMotorPowers(0.3, 1, 0);
             }

@@ -171,7 +171,7 @@ public class TeleOperation extends LinearOpMode {
             TriggerReader intakeIn = new TriggerReader(Operator, GamepadKeys.Trigger.RIGHT_TRIGGER);
             TriggerReader intakeOut = new TriggerReader(Operator, GamepadKeys.Trigger.LEFT_TRIGGER);
 
-            if(intakeIn.isDown()) {
+            if(intakeIn.isDown() || gamepad1.right_trigger > 0.1) {
                 robot.intakeSys.setState(intake.IntakeState.IN);
             }
             else if(intakeOut.isDown()) {
@@ -198,16 +198,16 @@ public class TeleOperation extends LinearOpMode {
                 }
             }
 
-            if(gamepad2.circle && !robot.lift.isDown()) {
+            if(gamepad2.circle || gamepad1.circle && !robot.lift.isDown()) {
                 robot.lift.drop();
             }
 
-            if(gamepad2.triangle && robot.intakeSys.isDown()) {
+            if(gamepad2.triangle || gamepad1.dpad_up && robot.intakeSys.isDown()) {
                 position = liftThree;
                 robot.lift.primeServo();
             }
 
-            if(gamepad2.cross && robot.intakeSys.isDown()) {
+            if(gamepad2.cross || gamepad1.dpad_down && robot.intakeSys.isDown()) {
                 robot.lift.startServo();
                 position = liftStart;
             }

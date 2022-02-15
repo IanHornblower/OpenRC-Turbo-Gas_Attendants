@@ -142,7 +142,7 @@ public class ContourPipeline extends OpenCvPipeline {
         }
 
         // return output;
-        return processed;
+        return output;
     }
     public int getRectHeight(){return maxRect.height;}
     public int getRectWidth(){ return maxRect.width; }
