@@ -103,8 +103,6 @@ public class TeleOperation extends LinearOpMode {
 
         runTime.start();
 
-        runTime.addSeconds(65);
-
         GamepadEx Driver = new GamepadEx(gamepad1);
         GamepadEx Operator = new GamepadEx(gamepad2);
 
