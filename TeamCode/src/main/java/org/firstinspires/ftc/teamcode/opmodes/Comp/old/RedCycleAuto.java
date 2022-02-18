@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.opmodes.Comp;
+package org.firstinspires.ftc.teamcode.opmodes.Comp.old;
 
 import static org.firstinspires.ftc.teamcode.hardware.lift.LIFT.D1;
 import static org.firstinspires.ftc.teamcode.hardware.lift.LIFT.D2;
@@ -20,6 +20,7 @@ import org.firstinspires.ftc.teamcode.hardware.Robot;
 import org.firstinspires.ftc.teamcode.hardware.lift;
 import org.firstinspires.ftc.teamcode.math.Point;
 import org.firstinspires.ftc.teamcode.math.Pose2D;
+import org.firstinspires.ftc.teamcode.opmodes.Comp.AutonomousConstants;
 import org.firstinspires.ftc.teamcode.opmodes.Comp.MatchConfig;
 import org.firstinspires.ftc.teamcode.util.AngleUtil;
 import org.firstinspires.ftc.teamcode.util.Timer;
@@ -27,6 +28,7 @@ import org.firstinspires.ftc.teamcode.vision.FreightFrenzyCamera;
 
 import java.util.concurrent.TimeUnit;
 
+@Disabled
 @Autonomous(name = "Red Cycle Auto", group = "Comp")
 public class RedCycleAuto extends LinearOpMode {
 

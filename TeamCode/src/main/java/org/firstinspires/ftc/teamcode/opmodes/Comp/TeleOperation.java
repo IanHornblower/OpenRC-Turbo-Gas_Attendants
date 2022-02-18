@@ -47,9 +47,6 @@ public class TeleOperation extends LinearOpMode {
     public static double movementSens = 1;
     public static double turnSens = 0.8;
 
-    public static double slowed_movementSens = 0.41;
-    public static double slowed_turnSens = 0.29;
-
     public static double position = liftStart;
     public static boolean dashboard = true;
 
@@ -141,7 +138,7 @@ public class TeleOperation extends LinearOpMode {
             }
 
             if(gamepad1.right_trigger > 0.1) {
-                leftX -= gamepad1.left_trigger;
+                leftX -= gamepad1.right_trigger;
             }
 
             if(driveState == DRIVE.FIELD) {
@@ -169,7 +166,7 @@ public class TeleOperation extends LinearOpMode {
             TriggerReader intakeIn = new TriggerReader(Operator, GamepadKeys.Trigger.RIGHT_TRIGGER);
             TriggerReader intakeOut = new TriggerReader(Operator, GamepadKeys.Trigger.LEFT_TRIGGER);
 
-            if(intakeIn.isDown() || gamepad1.right_trigger > 0.1) {
+            if(intakeIn.isDown()) {
                 robot.intakeSys.setState(intake.IntakeState.IN);
             }
             else if(intakeOut.isDown()) {
@@ -196,16 +193,16 @@ public class TeleOperation extends LinearOpMode {
                 }
             }
 
-            if(gamepad2.circle || gamepad1.circle && !robot.lift.isDown()) {
+            if(gamepad2.circle && !robot.lift.isDown()) {
                 robot.lift.drop();
             }
 
-            if(gamepad2.triangle || gamepad1.dpad_up && robot.intakeSys.isDown()) {
+            if(gamepad2.triangle && robot.intakeSys.isDown()) {
                 position = liftThree;
                 robot.lift.primeServo();
             }
 
-            if(gamepad2.cross || gamepad1.dpad_down && robot.intakeSys.isDown()) {
+            if(gamepad2.cross && robot.intakeSys.isDown()) {
                 robot.lift.startServo();
                 position = liftStart;
             }
@@ -234,8 +231,7 @@ public class TeleOperation extends LinearOpMode {
 
 
 
-
-                //telemetry.addData("End Auto Pos", PoseStorage.autoEnd.toString());
+            //telemetry.addData("End Auto Pos", PoseStorage.autoEnd.toString());
             //telemetry.addData("Current Pos", robot.pos.toString());
             //telemetry.addData("IMU ANGLE", robot.IMU.getIMUHeading() + "DEGREES: " + Math.toDegrees(robot.IMU.getIMUHeading()));
             //telemetry.addData("Robot ANGLE", robot.pos.heading + "DEGREES: " + Math.toDegrees(robot.pos.heading));
@@ -243,7 +239,6 @@ public class TeleOperation extends LinearOpMode {
             telemetry.addData("lift", robot.getLift().getCurrentPosition());
             telemetry.addData("Lift Level", lift[0].toString());
             telemetry.addData("Drive State", driveState.toString());
-            //telemetry.addData("Drive Speed", speed.toString());
             telemetry.addData("Side", MatchConfig.side.toString());
             telemetry.addData("Run Time", (int)runTime.currentSeconds());
             telemetry.update();

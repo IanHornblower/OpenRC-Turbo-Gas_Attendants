@@ -28,18 +28,22 @@ import org.firstinspires.ftc.teamcode.vision.FreightFrenzyCamera;
 import java.util.concurrent.TimeUnit;
 
 @Autonomous(name = "2 Cycle Red Cycle Auto", group = "Comp")
-public class TwoCycleRed extends LinearOpMode {
+public class RedSideWarehouseCycle extends LinearOpMode {
 
     enum ElementPosition {
         LEFT, MIDDLE, RIGHT, NONE
     }
 
-    boolean runTwice = false;
+    boolean primed = false;
+    boolean ranTwice = false;
 
     @Override
     public void runOpMode() throws InterruptedException {
         telemetry.addLine("Starting Hardware Map & Camera");
         telemetry.update();
+
+        MatchConfig.side = MatchConfig.SIDE.RED;  // Change for blue
+        MatchConfig.park = MatchConfig.PARK.WAREHOUSE;
 
         // Init
 
@@ -50,6 +54,13 @@ public class TwoCycleRed extends LinearOpMode {
         robot.lift.primeServo();
 
         robot.setSTART_POSITION(AutonomousConstants.RedConstants.Warehouse.START_POSITION);
+
+        // Set Camera Constants & then init
+
+        FreightFrenzyCamera.abVerticalLine = 213; // Adjust
+        FreightFrenzyCamera.bcVerticalLine = 426; // Adjust
+
+        FreightFrenzyCamera.lowestBlobArea = 200;  // Maybe make bigger idk
 
         camera.initWebCamera();
         camera.initPipeline();
@@ -70,8 +81,10 @@ public class TwoCycleRed extends LinearOpMode {
                     state = ElementPosition.MIDDLE;
                 case C:
                     state = ElementPosition.RIGHT;
+                case ABSENT: // Account for displacement
+                    state = ElementPosition.RIGHT;
                 default:
-                    state = ElementPosition.MIDDLE;  // May Switch later this is the easiest
+                    state = ElementPosition.MIDDLE;
             }
 
             telemetry.clear();
@@ -90,70 +103,63 @@ public class TwoCycleRed extends LinearOpMode {
         waitForStart();
 
         runTime.start();
+        robot.freightDetector.run();
 
         while (opModeIsActive() && !isStopRequested()) {
 
             // TESTING LEFT
-            state = ElementPosition.LEFT;
+            state = ElementPosition.LEFT; // Change very soon
 
             /*
              * Run Auto -- SPLIT CODE LATER
+             * TODO: adjust angles, for 1 & 2 cycles and test all auto types
              */
 
             await(200, () -> robot.intakeSys.regularFreightIntake());
 
-            await(400, () -> robot.lift.SyncSetPosition(lift.liftOne));
-
-            //Timing.Timer joe = new Timing.Timer(2);
-            //joe.start();
-
-            motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.SHIPPING_HUB_LEVEL_ONE, 1300, 1);
+            switch (state) {
+                case LEFT:
+                    await(400, () -> robot.lift.SyncSetPosition(lift.liftOne));
+                    motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.SHIPPING_HUB_LEVEL_ONE, 1300, 1);
+                case MIDDLE:
+                    await(400, () -> robot.lift.SyncSetPosition(lift.liftTwo));
+                    motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.SHIPPING_HUB_LEVEL_TWO, 1300, 1);
+                case RIGHT:
+                    await(400, () -> robot.lift.SyncSetPosition(lift.liftThree));
+                    motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.SHIPPING_HUB_LEVEL_THREE, 1300, 1);
+                default:
+                    await(400, () -> robot.lift.SyncSetPosition(lift.liftOne));
+                    motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.SHIPPING_HUB_LEVEL_THREE, 1300, 1);
+            }
 
             robot.lift.drop();
             sleep(1500);
-
             robot.lift.primeServo();
 
             await(300, () -> robot.lift.startServo());
-
             robot.lift.setPosition(lift.liftStart);
 
-            // Cycle 1 //
+            primed = false;
+            ranTwice = false;
 
+            // Cycle 1 //
             // Run into wall
             motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.WAREHOUSE_WALL, 1000, 1);
-
             runInRelation(robot, 1, 0, 0, 500);
 
             // Start Intake Loop
-
-            robot.intakeSys.setIntakePower(1.0);
+            robot.intakeSys.setIntakePower(1.0);  // Start intaking
 
             double currentY = robot.pos.y;
-
-            while (robot.pos.y < currentY + AutonomousConstants.RedConstants.Warehouse.DISTANCE_BLIND) {
+            while (robot.pos.y < currentY + AutonomousConstants.RedConstants.Warehouse.DISTANCE_BLIND) {  // Drive for certain distance
                 robot.updateOdometry();
                 robot.DriveTrain.setMotorPowers(0.3, 1, 0);
             }
             robot.stopDrive();
 
-            while (!robot.freightDetector.hasFreight()) {
-                robot.updateOdometry();
-                robot.DriveTrain.setMotorPowers(0, 0.5, 0);
-            }
-            robot.DriveTrain.stopDrive();
+            intakeLoop(robot);  // Intake stuff
 
-            await(800, ()-> {
-                robot.lift.primeServo();
-
-                robot.intakeSys.setIntakePower(0.0);
-            });
-
-            runInRelation(robot, 0.6, 0, 0, 800);
-
-            await(200, () -> robot.intakeSys.setIntakePower(-0.9));
-
-            robot.lift.setPosition(lift.liftOne);
+            robot.intakeSys.setIntakePower(0.0);
 
             while (robot.pos.y > AutonomousConstants.RedConstants.Warehouse.RETURN_DISTANCE_MIN) {
                 robot.updateOdometry();
@@ -161,15 +167,9 @@ public class TwoCycleRed extends LinearOpMode {
             }
             robot.stopDrive();
 
-            robot.intakeSys.setIntakePower(0.0);
-
-            // End Loop
-
-            //motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.WAREHOUSE_WALL, 1);
-
             await(400, () -> robot.lift.SyncSetPosition(lift.liftThree));
 
-            motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.SHIPPING_HUB_LEVEL_THREE, 1300, 1);
+            motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.SHIPPING_HUB_LEVEL_CYCLE_1, 1300, 1);
 
             robot.lift.drop();
             sleep(2000);
@@ -179,8 +179,10 @@ public class TwoCycleRed extends LinearOpMode {
 
             robot.lift.setPosition(lift.liftStart);
 
-            // Loop Again
+            primed = false;
+            ranTwice = false;
 
+            // Loop Again // Cycle 2
             // Start
             motionProfile.runToPositionSync(new Pose2D(64.5, 3, Math.toRadians(90)), 1500, 1);
 
@@ -198,35 +200,9 @@ public class TwoCycleRed extends LinearOpMode {
             }
             robot.stopDrive();
 
-            while (!robot.freightDetector.hasFreight()) {
-                robot.updateOdometry();
-                robot.DriveTrain.setMotorPowers(0, 0.5, 0);
-            }
-            robot.DriveTrain.stopDrive();
+            intakeLoop(robot); // yup
 
-            await(800, ()-> {
-                robot.lift.primeServo();
-
-                robot.intakeSys.setIntakePower(0.0);
-            });
-
-            if(!robot.freightDetector.hasFreight()) {
-                robot.lift.startServo();
-                robot.intakeSys.setIntakePower(1);
-                sleep(300);
-            }
-
-            await(200, ()-> {
-                robot.lift.primeServo();
-
-                robot.intakeSys.setIntakePower(0.0);
-            });
-
-            runInRelation(robot, 0.6, 0, 0, 800);
-
-            await(200, () -> robot.intakeSys.setIntakePower(-0.9));
-
-            robot.lift.setPosition(lift.liftOne);
+            robot.intakeSys.setIntakePower(0.0);
 
             while (robot.pos.y > AutonomousConstants.RedConstants.Warehouse.RETURN_DISTANCE_MIN) {
                 robot.updateOdometry();
@@ -237,12 +213,9 @@ public class TwoCycleRed extends LinearOpMode {
             robot.intakeSys.setIntakePower(0.0);
 
             // End Loop
-
-            //motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.WAREHOUSE_WALL, 1);
-
             await(400, () -> robot.lift.SyncSetPosition(lift.liftThree));
 
-            motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.SHIPPING_HUB_LEVEL_THREE, 1300, 1);
+            motionProfile.runToPositionSync(AutonomousConstants.RedConstants.Warehouse.SHIPPING_HUB_LEVEL_CYCLE_2, 1300, 1);
 
             robot.lift.drop();
             sleep(2000);
@@ -260,7 +233,7 @@ public class TwoCycleRed extends LinearOpMode {
 
             currentY = robot.pos.y;
 
-            while (robot.pos.y < currentY + AutonomousConstants.RedConstants.Warehouse.DISTANCE_BLIND + 13) {
+            while (robot.pos.y < currentY + AutonomousConstants.RedConstants.Warehouse.PARK_DISTANCE) {
                 robot.updateOdometry();
                 robot.DriveTrain.setMotorPowers(0.3, 1, 0);
             }
@@ -281,6 +254,53 @@ public class TwoCycleRed extends LinearOpMode {
             robot.DriveTrain.setMotorPowers(x, y, t);
         }
         robot.stopDrive();
+    }
+
+    public void primeLift(Robot robot) throws InterruptedException {
+        primed = true;
+        robot.lift.primeServo();
+        robot.lift.setPosition(lift.liftOne);
+    }
+
+    public void retractLift(Robot robot) throws InterruptedException {
+        primed = false;
+        robot.lift.startServo();
+        robot.lift.setPosition(lift.liftStart);
+    }
+
+    public void intakeLoop(Robot robot) throws InterruptedException {
+        while (!robot.freightDetector.hasFreight()) {  // Drive forward till freight
+            robot.updateOdometry();
+            robot.DriveTrain.setMotorPowers(0, 0.5, 0);
+        }
+        robot.DriveTrain.stopDrive();
+
+        runInRelation(robot, 0.6, 0, 0, 800);
+        robot.intakeSys.setIntakePower(0.0);
+        primeLift(robot);  // Ready lift
+
+        while (!robot.freightDetector.hasFreight()) {  // Drive forward till freight
+            ranTwice = true;
+            robot.updateOdometry();
+
+            robot.intakeSys.setIntakePower(1.0);
+            robot.DriveTrain.setMotorPowers(0, 0.5, 0);
+
+            if(primed) {
+                retractLift(robot); // If lift fucks up this is why
+            }
+        }
+        robot.DriveTrain.stopDrive();
+
+        if(ranTwice) {
+            runInRelation(robot, 0.6, 0, 0, 300);
+            robot.intakeSys.setIntakePower(0.0);
+
+            primeLift(robot);  // Ready lift
+        }
+
+        robot.intakeSys.setIntakePower(-0.9);
+        robot.lift.setPosition(lift.liftOne);
     }
 
 }

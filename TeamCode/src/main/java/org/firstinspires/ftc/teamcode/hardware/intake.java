@@ -33,7 +33,7 @@ public class intake {
         this.robot = robot;
         this.intake = robot.getIntake();
         this.intakeServo = robot.getIntakeServo();
-        state = IntakeState.UP;
+        state = IntakeState.DOWN;
     }
 
 
