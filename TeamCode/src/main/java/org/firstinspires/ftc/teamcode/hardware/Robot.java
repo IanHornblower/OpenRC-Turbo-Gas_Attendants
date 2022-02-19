@@ -50,7 +50,7 @@ public class Robot extends OpMode {
     public Controller driveController;
     public Controller operatorController;
 
-    public FtcDashboard dashboard;
+    public static FtcDashboard dashboard;
 
     public enum controlType{ROBOT, FIELD}
 
@@ -306,6 +306,8 @@ public class Robot extends OpMode {
         pos.y += dyTraveled;
         pos.heading += dtheta;
 
+        /*
+
         TelemetryPacket packet = new TelemetryPacket();
 
         Field field = new Field(packet);
@@ -316,6 +318,8 @@ public class Robot extends OpMode {
         packet.addLine("XYH: " + pos.toString());
 
         dashboard.sendTelemetryPacket(packet);
+
+         */
 
         oldRightPosition = currentRightPosition;
         oldLeftPosition = currentLeftPosition;

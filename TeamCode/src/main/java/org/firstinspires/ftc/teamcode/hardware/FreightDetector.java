@@ -14,7 +14,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 @Config
 public class FreightDetector {
 
-    public static double threshold = 80;
+    public static double threshold = 60;
     public static volatile boolean isRunning = true;
 
     Robot robot;
