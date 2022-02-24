@@ -16,7 +16,8 @@ public class RedCycleAuto {
 
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
                 // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
-                .setConstraints(36, 40, Math.toRadians(120), Math.toRadians(78), 10) // Slowest Speed Current DT can drive should be 20-30% faster
+                //.setConstraints(36, 40, Math.toRadians(120), Math.toRadians(78), 10) // Slowest Speed Current DT can drive should be 20-30% faster
+                .setConstraints(52.48291908330528, 52.48291908330528, Math.toRadians(250.58748), Math.toRadians(250.58748), 10)
                 .setDimensions(12, 18)
                 .followTrajectorySequence(drive ->
                         drive.trajectorySequenceBuilder(WarehouseCycleAuto.RedConstants.START_POSITION)

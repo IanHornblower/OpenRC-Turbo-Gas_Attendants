@@ -11,7 +11,7 @@ public class Joystick {
         right
     }
 
-    enum AXIS {
+    public static enum AXIS {
         x,
         y
     }
@@ -41,7 +41,7 @@ public class Joystick {
                 x = gamepadEx.gamepad().left_stick_x * xMultiplier;
                 break;
             case right:
-                x = gamepadEx.gamepad().right_stick_x * yMultiplier;
+                x = gamepadEx.gamepad().right_stick_x * xMultiplier;
                 break;
         }
         return x;
@@ -50,10 +50,10 @@ public class Joystick {
     public double y() {
         switch (side) {
             case left:
-                y = gamepadEx.gamepad().left_stick_y;
+                y = gamepadEx.gamepad().left_stick_y * yMultiplier;
                 break;
             case right:
-                y = gamepadEx.gamepad().right_stick_y;
+                y = gamepadEx.gamepad().right_stick_y * yMultiplier;
                 break;
         }
         return y;
