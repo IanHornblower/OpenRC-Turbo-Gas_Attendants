@@ -1,5 +1,4 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
-public class Robot {
-    // Monger
+public class DuckMotor {
 }
