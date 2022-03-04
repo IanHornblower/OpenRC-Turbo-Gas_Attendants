@@ -7,7 +7,7 @@ import org.firstinspires.ftc.teamcode.gamepad.Joystick;
 
 public class TeleOperation extends LinearOpMode {
     @Override
-    public void runOpMode() throws InterruptedException {
+    public void runOpMode() throws  InterruptedException {
         
     }
 }

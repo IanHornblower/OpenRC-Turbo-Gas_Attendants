@@ -1,5 +1,169 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
-public class Robot {
-    // Monger
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.HardwareDevice;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.teamcode.gamepad.GamepadEx;
+import org.firstinspires.ftc.teamcode.roadrunner.drive.SampleMecanumDrive;
+
+public class Robot extends OpMode {
+
+    private DcMotorEx backLeft, backRight, frontLeft, frontRight;
+
+    private DcMotorEx leftEncoder, rightEncoder, lateralEncoder;
+
+    private DcMotorEx liftMotor;
+    private Servo rotationServo;
+    private Servo grabberServo;
+
+    private DcMotor intake;
+    private Servo intakeServo;
+
+    private DcMotorEx duck;
+
+    private BNO055IMU imu;
+    private Orientation angles;
+
+    public ColorSensor freightSensor_color;
+    public DistanceSensor freightSensor_distance;
+
+    public HardwareMap hwMap;
+    public SampleMecanumDrive driveTrain;
+    public IMU IMU;
+    public Lift lift;
+    public Intake intakeSys;
+    public DuckMotor spinMotor;
+    public GamepadEx driveController;
+    public GamepadEx operatorController;
+
+    public static FtcDashboard dashboard;
+
+    @Override
+    public void init() {
+
+    }
+
+    @Override
+    public void loop() throws InterruptedException {
+
+    }
+
+    public enum controlType{ROBOT, FIELD}
+
+    public Robot(HardwareMap hardwareMap) {
+        hwMap = hardwareMap;
+
+        frontRight = hardwareMap.get(DcMotorEx.class, "fr");
+        frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        frontLeft = hardwareMap.get(DcMotorEx.class, "fl");
+        frontLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+        frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        backLeft = hardwareMap.get(DcMotorEx.class, "bl");
+        backLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+        backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        backRight = hardwareMap.get(DcMotorEx.class, "br");
+        backRight.setDirection(DcMotorSimple.Direction.FORWARD);
+        backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        liftMotor = hardwareMap.get(DcMotorEx.class, "lift");
+        liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        liftMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        rotationServo = hardwareMap.servo.get("rotateServo");
+        grabberServo = hardwareMap.servo.get("grabber");
+
+        intake = hardwareMap.dcMotor.get("intake");
+        intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        intake.setDirection(DcMotorSimple.Direction.REVERSE);
+        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+        intakeServo = hardwareMap.servo.get("intakeServo");
+
+        freightSensor_color = hardwareMap.get(ColorSensor.class, "color");
+        freightSensor_distance = hardwareMap.get(DistanceSensor.class, "color");
+
+        duck = hardwareMap.get(DcMotorEx.class, "duck");
+        duck.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        duck.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        lateralEncoder = frontLeft;
+        //lateralEncoder.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        rightEncoder = backRight;
+        //rightEncoder.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        leftEncoder = backLeft;
+        //leftEncoder.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        stopDrive();
+        resetDriveEncoders();
+
+        Time.reset();
+
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.angleUnit           = BNO055IMU.AngleUnit.RADIANS;
+        parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
+        parameters.loggingEnabled      = true;
+        parameters.loggingTag          = "IMU";
+        parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
+
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu.initialize(parameters);
+
+        driveTrain = new SampleMecanumDrive(hardwareMap);
+        IMU = new IMU(imu);
+        lift = new Lift(this);
+        intakeSys = new Intake(this);
+        spinMotor = new DuckMotor(this);
+        driveController = new GamepadEx(gamepad1);
+        operatorController = new GamepadEx(gamepad2);
+    }
+
+    public void update() {
+
+    }
+
+    public void setSTART_POSITION(Pose2d START) {
+        driveTrain.setPoseEstimate(START);
+    }
+
+    private void resetDriveEncoders() {
+        rightEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        leftEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        lateralEncoder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lateralEncoder.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
+
+    public void stopDrive() {
+        frontLeft.setPower(0);
+        frontRight.setPower(0);
+        backLeft.setPower(0);
+        backRight.setPower(0);
+    }
 }
