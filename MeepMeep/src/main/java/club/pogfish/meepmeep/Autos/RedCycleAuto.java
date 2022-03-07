@@ -20,23 +20,44 @@ public class RedCycleAuto {
                 .setConstraints(52.48291908330528, 52.48291908330528, Math.toRadians(250.58748), Math.toRadians(250.58748), 10)
                 .setDimensions(12, 18)
                 .followTrajectorySequence(drive ->
-                        drive.trajectorySequenceBuilder(WarehouseCycleAuto.RedConstants.START_POSITION)
+                        drive.trajectorySequenceBuilder(WarehouseCycleAuto.RedConstants.ALT_START_POSITION)
                                 /*
                                     Drop Block
                                  */
 
+                                /*  // Spline to Hub kinda slower gotta test. //
+
                                 .setReversed(true)
 
                                 .splineTo(
-                                        WarehouseCycleAuto.RedConstants.TEAM_SHIPPING_HUB.vec(),
-                                        Math.toRadians(112)).setTangent(Math.toRadians(112))
+                                       WarehouseCycleAuto.RedConstants.TEAM_SHIPPING_HUB.vec(),
+                                       Math.toRadians(112))
 
                                 .setReversed(false)
+
+                                 */
+
+                                .addTemporalMarker(0.2, ()-> {
+                                    // Drop Intake
+                                    // Set Lift & V4B to correct level
+                                })
+                                .addTemporalMarker(1, ()-> {  // Tune this time level
+                                    // Drop Preload block
+                                })
+
+                                .lineToSplineHeading(WarehouseCycleAuto.RedConstants.TEAM_SHIPPING_HUB)
+
+                                .addTemporalMarker(()-> {
+                                    // Return Lift System to intaking position
+                                })
+                                .setReversed(false)
+
                                 /*
                                     Start Cycles
                                  */
 
                                 // Cycle 1
+
 
                                 .splineTo(
                                         WarehouseCycleAuto.RedConstants.OUTSIDE_WAREHOUSE.vec(),
@@ -84,8 +105,6 @@ public class RedCycleAuto {
                                         WarehouseCycleAuto.RedConstants.CYCLE_SHIPPING_HUB.getHeading())
                                 .setTangent(WarehouseCycleAuto.RedConstants.TANGENT)
 
-                                /*
-
                                 // Cycle 5
 
                                 .splineTo(
@@ -109,8 +128,6 @@ public class RedCycleAuto {
                                         WarehouseCycleAuto.RedConstants.CYCLE_SHIPPING_HUB.vec(),
                                         WarehouseCycleAuto.RedConstants.CYCLE_SHIPPING_HUB.getHeading())
                                 .setTangent(WarehouseCycleAuto.RedConstants.TANGENT)
-
-                                 */
 
                                 .build() // End Auto [stop();]
                 );

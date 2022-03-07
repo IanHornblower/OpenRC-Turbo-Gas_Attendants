@@ -69,42 +69,51 @@ public class Robot extends OpMode {
         frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
         frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         frontLeft = hardwareMap.get(DcMotorEx.class, "fl");
         frontLeft.setDirection(DcMotorSimple.Direction.FORWARD);
         frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         backLeft = hardwareMap.get(DcMotorEx.class, "bl");
         backLeft.setDirection(DcMotorSimple.Direction.FORWARD);
         backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         backRight = hardwareMap.get(DcMotorEx.class, "br");
         backRight.setDirection(DcMotorSimple.Direction.FORWARD);
         backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        liftMotor = hardwareMap.get(DcMotorEx.class, "lift");
+        liftMotor = hardwareMap.get(DcMotorEx.class, "liftMotor");
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         liftMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        rotationServo = hardwareMap.servo.get("rotateServo");
-        grabberServo = hardwareMap.servo.get("grabber");
+        //rotationServo = hardwareMap.servo.get("rotateServo");
+        //grabberServo = hardwareMap.servo.get("grabber");
 
-        intake = hardwareMap.dcMotor.get("intake");
+        intake = hardwareMap.dcMotor.get("intakeMotor");
         intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         intakeServo = hardwareMap.servo.get("intakeServo");
 
-        freightSensor_color = hardwareMap.get(ColorSensor.class, "color");
-        freightSensor_distance = hardwareMap.get(DistanceSensor.class, "color");
+        //freightSensor_color = hardwareMap.get(ColorSensor.class, "color");
+        //freightSensor_distance = hardwareMap.get(DistanceSensor.class, "color");
 
-        duck = hardwareMap.get(DcMotorEx.class, "duck");
+        duck = hardwareMap.get(DcMotorEx.class, "duckMotor");
+        duck.setDirection(DcMotorSimple.Direction.FORWARD);
         duck.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         duck.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
@@ -116,21 +125,6 @@ public class Robot extends OpMode {
 
         leftEncoder = backLeft;
         //leftEncoder.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        stopDrive();
-        resetDriveEncoders();
-
-        Time.reset();
-
-        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
-        parameters.angleUnit           = BNO055IMU.AngleUnit.RADIANS;
-        parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
-        parameters.loggingEnabled      = true;
-        parameters.loggingTag          = "IMU";
-        parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
-
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-        imu.initialize(parameters);
 
         driveTrain = new SampleMecanumDrive(hardwareMap);
         IMU = new IMU(imu);
@@ -166,4 +160,61 @@ public class Robot extends OpMode {
         backLeft.setPower(0);
         backRight.setPower(0);
     }
+
+    public DcMotor getIntake() {
+        return intake;
+    }
+
+    public Servo getIntakeServo() {
+        return intakeServo;
+    }
+
+    public DcMotorEx getBackLeft() {
+        return backLeft;
+    }
+
+    public DcMotorEx getBackRight() {
+        return backRight;
+    }
+
+    public DcMotorEx getFrontLeft() {
+        return frontLeft;
+    }
+
+    public DcMotorEx getFrontRight() {
+        return frontRight;
+    }
+
+    public DcMotorEx getLeftEncoder() {
+        return leftEncoder;
+    }
+
+    public DcMotorEx getRightEncoder() {
+        return rightEncoder;
+    }
+
+    public DcMotorEx getLateralEncoder() {
+        return leftEncoder;
+    }
+
+    public DcMotorEx getLiftMotor() {
+        return liftMotor;
+    }
+
+    public DcMotorEx getDuck() {
+        return duck;
+    }
+
+    public double getRight() {
+        return rightEncoder.getCurrentPosition(); // invert if necessary
+    }
+
+    public double getLeft() {
+        return leftEncoder.getCurrentPosition();  // invert if necessary
+    }
+
+    public double getLateral() {
+        return lateralEncoder.getCurrentPosition();  // invert if necessary
+    }
+
 }

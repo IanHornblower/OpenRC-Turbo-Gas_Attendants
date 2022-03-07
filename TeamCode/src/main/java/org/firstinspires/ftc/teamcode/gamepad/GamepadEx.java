@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 
 public class GamepadEx {
 
-    private final Gamepad gamepad;
+    private Gamepad gamepad;
     public Joystick leftJoystick;
     public Joystick rightJoystick;
     public Trigger leftTrigger;
@@ -35,6 +35,10 @@ public class GamepadEx {
 
     public Gamepad gamepad() {
         return gamepad;
+    }
+
+    public void setGamepad(Gamepad g) {
+        gamepad = g;
     }
 
     /*

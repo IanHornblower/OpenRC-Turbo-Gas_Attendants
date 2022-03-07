@@ -29,7 +29,7 @@ public class Intake {
         OUT,
         OFF
     }
-    public intake(Robot robot) {
+    public Intake(Robot robot) {
         this.robot = robot;
         this.intake = robot.getIntake();
         this.intakeServo = robot.getIntakeServo();
