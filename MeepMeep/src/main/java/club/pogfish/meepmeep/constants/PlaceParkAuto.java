@@ -8,7 +8,7 @@ public class PlaceParkAuto {
         /*
             Start
          */
-        public static Pose2d START_POSITION = new Pose2d(7, -63, Math.toRadians(0));
+        public static Pose2d START_POSITION = new Pose2d(12, -63, Math.toRadians(270));
 
         /*
             Location Based on level (shouldn't matter because of lift)
@@ -18,8 +18,8 @@ public class PlaceParkAuto {
         /*
             Warehouse stuff
          */
-        public static Pose2d OUTSIDE_WAREHOUSE = new Pose2d(10, -62, Math.toRadians(0));
-        public static Pose2d INSIDE_WAREHOUSE = new Pose2d(40, -62, Math.toRadians(0));
+        public static Pose2d OUTSIDE_WAREHOUSE = new Pose2d(10, -63.7, Math.toRadians(0));
+        public static Pose2d INSIDE_WAREHOUSE = new Pose2d(40, -63.7, Math.toRadians(0));
         public static Pose2d PARKED_WAREHOUSE = new Pose2d(40, -40, Math.toRadians(90));
     }
 
@@ -27,7 +27,7 @@ public class PlaceParkAuto {
         /*
             Start
          */
-        public static Pose2d START_POSITION = new Pose2d(7, 63, Math.toRadians(0));
+        public static Pose2d START_POSITION = new Pose2d(12, 63, Math.toRadians(90));
 
         /*
             Location Based on level (shouldn't matter because of lift)
@@ -37,8 +37,8 @@ public class PlaceParkAuto {
         /*
             Warehouse stuff
          */
-        public static Pose2d OUTSIDE_WAREHOUSE = new Pose2d(10, 62, Math.toRadians(0));
-        public static Pose2d INSIDE_WAREHOUSE = new Pose2d(40, 62, Math.toRadians(0));
+        public static Pose2d OUTSIDE_WAREHOUSE = new Pose2d(10, 63.7, Math.toRadians(0));
+        public static Pose2d INSIDE_WAREHOUSE = new Pose2d(40, 63.7, Math.toRadians(0));
         public static Pose2d PARKED_WAREHOUSE = new Pose2d(40, 40, Math.toRadians(270));
     }
 
