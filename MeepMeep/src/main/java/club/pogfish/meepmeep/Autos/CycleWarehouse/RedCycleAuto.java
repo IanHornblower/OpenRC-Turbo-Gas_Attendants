@@ -21,6 +21,7 @@ public class RedCycleAuto {
                 .setDimensions(12, 18)
                 .followTrajectorySequence(drive ->
                         drive.trajectorySequenceBuilder(WarehouseCycleAuto.RedConstants.ALT_START_POSITION)
+
                                 /*
                                     Drop Block
                                  */
@@ -58,6 +59,7 @@ public class RedCycleAuto {
 
                                 // Cycle 1
 
+/**
 
                                 .splineTo(
                                         WarehouseCycleAuto.RedConstants.OUTSIDE_WAREHOUSE.vec(),
@@ -129,7 +131,11 @@ public class RedCycleAuto {
                                         WarehouseCycleAuto.RedConstants.CYCLE_SHIPPING_HUB.getHeading())
                                 .setTangent(WarehouseCycleAuto.RedConstants.TANGENT)
 
+                                */
+
                                 .build() // End Auto [stop();]
+
+
                 );
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_FREIGHTFRENZY_ADI_DARK)
