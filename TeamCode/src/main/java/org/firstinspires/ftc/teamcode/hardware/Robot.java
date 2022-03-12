@@ -1,9 +1,12 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
+import android.graphics.Paint;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -25,8 +28,10 @@ public class Robot extends OpMode {
     private DcMotorEx leftEncoder, rightEncoder, lateralEncoder;
 
     private DcMotorEx liftMotor;
+    private DcMotorEx grabMotor;
     private Servo rotationServo;
     private Servo grabberServo;
+    private Servo dropServo;
 
     private DcMotor intake;
     private Servo intakeServo;
@@ -39,12 +44,17 @@ public class Robot extends OpMode {
     public ColorSensor freightSensor_color;
     public DistanceSensor freightSensor_distance;
 
+    public RevBlinkinLedDriver blinkinLedDriver;
+
     public HardwareMap hwMap;
     public SampleMecanumDrive driveTrain;
     public IMU IMU;
     public Lift lift;
     public Intake intakeSys;
     public DuckMotor spinMotor;
+    public Capper capper;
+    public FreightDetector freightDetector;
+    public Blinkin blinkin;
     public GamepadEx driveController;
     public GamepadEx operatorController;
 
@@ -99,8 +109,15 @@ public class Robot extends OpMode {
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         liftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
+        grabMotor = hardwareMap.get(DcMotorEx.class, "drab");
+        grabMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        grabMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        grabMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        grabMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         //rotationServo = hardwareMap.servo.get("rotateServo");
-        //grabberServo = hardwareMap.servo.get("grabber");
+        grabberServo = hardwareMap.servo.get("hand");
+        dropServo = hardwareMap.servo.get("drop");
 
         intake = hardwareMap.dcMotor.get("intakeMotor");
         intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -109,13 +126,15 @@ public class Robot extends OpMode {
 
         intakeServo = hardwareMap.servo.get("intakeServo");
 
-        //freightSensor_color = hardwareMap.get(ColorSensor.class, "color");
-        //freightSensor_distance = hardwareMap.get(DistanceSensor.class, "color");
+        freightSensor_color = hardwareMap.get(ColorSensor.class, "color");
+        freightSensor_distance = hardwareMap.get(DistanceSensor.class, "color");
 
         duck = hardwareMap.get(DcMotorEx.class, "duckMotor");
         duck.setDirection(DcMotorSimple.Direction.FORWARD);
         duck.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         duck.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        blinkinLedDriver = hardwareMap.get(RevBlinkinLedDriver.class, "blinkin");
 
         lateralEncoder = frontLeft;
         //lateralEncoder.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -131,6 +150,9 @@ public class Robot extends OpMode {
         lift = new Lift(this);
         intakeSys = new Intake(this);
         spinMotor = new DuckMotor(this);
+        freightDetector = new FreightDetector(this);
+        capper = new Capper(this);
+        blinkin = new Blinkin(this);
         driveController = new GamepadEx(gamepad1);
         operatorController = new GamepadEx(gamepad2);
     }
@@ -159,6 +181,26 @@ public class Robot extends OpMode {
         frontRight.setPower(0);
         backLeft.setPower(0);
         backRight.setPower(0);
+    }
+
+    public RevBlinkinLedDriver getBlinkin() {
+        return blinkinLedDriver;
+    }
+
+    public DistanceSensor getFreightSensor_distance() {
+        return freightSensor_distance;
+    }
+
+    public ColorSensor getFreightSensor_color() {
+        return freightSensor_color;
+    }
+
+    public Servo getGrabberServo() {
+        return grabberServo;
+    }
+
+    public Servo getDropServo() {
+        return dropServo;
     }
 
     public DcMotor getIntake() {
@@ -199,6 +241,10 @@ public class Robot extends OpMode {
 
     public DcMotorEx getLiftMotor() {
         return liftMotor;
+    }
+
+    public DcMotorEx getGrabMotor() {
+        return grabMotor;
     }
 
     public DcMotorEx getDuck() {

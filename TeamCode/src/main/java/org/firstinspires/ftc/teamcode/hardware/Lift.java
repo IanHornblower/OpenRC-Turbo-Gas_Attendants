@@ -1,166 +1,224 @@
 package org.firstinspires.ftc.teamcode.hardware;
 
-import com.ThermalEquilibrium.homeostasis.Controllers.Feedback.BasicPID;
-import com.ThermalEquilibrium.homeostasis.Controllers.Feedback.PIDEx;
-import com.ThermalEquilibrium.homeostasis.Controllers.Feedforward.FeedforwardEx;
-import com.ThermalEquilibrium.homeostasis.Controllers.Feedforward.NoFeedforward;
-import com.ThermalEquilibrium.homeostasis.Filters.Estimators.RawValue;
-import com.ThermalEquilibrium.homeostasis.Parameters.FeedforwardCoefficients;
-import com.ThermalEquilibrium.homeostasis.Parameters.FeedforwardCoefficientsEx;
-import com.ThermalEquilibrium.homeostasis.Parameters.PIDCoefficients;
-import com.ThermalEquilibrium.homeostasis.Parameters.PIDCoefficientsEx;
-import com.ThermalEquilibrium.homeostasis.Systems.BasicSystem;
+import static org.firstinspires.ftc.teamcode.util.Init.init;
+
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.controller.PIDFController;
-import com.noahbres.meepmeep.MeepMeep;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
 
-import java.util.function.DoubleSupplier;
-
-import kotlin.reflect.KCallable;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Config
 public class Lift {
 
-    // Lift - Motor Maybe 2 (encoder)
-        // 2 Limit Switches
-
-    // V4Bar - Motor (1) / Servos (2) (encoder)
-        // 2 Limit Switches
-
-    // Object Manipulator - Servo
-        // Color Sensor
-
+    DcMotor lift;
+    Servo boxServo;
     Robot robot;
-    DcMotorEx liftMotor;
 
-    public static double MAX_VELO = 5;
-    public static double MAX_ACCEL= 5;
-    double pTime = System.currentTimeMillis();
-    public double error, oVelocity, oAcceleration;
+    public static double power = 0.4;
+    public static double min = 0.2;
+    public static double max = 0.6;
+    public static double threshold = 20;
 
-    public static double kV = 0;
-    public static double kA = 0;
-    public static double kS = 0;
-    public static double kG = 0;
-    public static double kCos = 0.15;
-    public static double kP = 0.027;
-    public static double kI = 0.00006;
-    public static double kD = 0;
+    // Dont use
+    public static double liftStart = 5;
+    public static double liftOne = 300/0.71724137931;
+    public static double liftTwo = 600/0.71724137931;
+    // Use
+    public static double liftThree = 1420;
+    public static double liftPrimed = liftThree;
 
-    public static double slowStart = 0.3;
-    public static double maxMed = 0.3;
-    public static double slowEnd = 0.3;
+    public static double servoStart = 0.81;
+    public static double servoPrimed = 0.63;
+    public static double servoDropped = 0.31;
+    public static double servoDriving = 0.69;
+    public static double servoSuperDrop = 0.2;
 
-    PIDCoefficients coefficients = new PIDCoefficients(kP,kI,kD);
-    DoubleSupplier motorPosition = new DoubleSupplier() {
-        @Override
-        public double getAsDouble() {
-            return liftMotor.getCurrentPosition();
-        }
-    };
-    FeedforwardCoefficientsEx feedforwardCoefficients = new FeedforwardCoefficientsEx(kV, kA, kS, kG, kCos);
-    FeedforwardEx feedforward = new FeedforwardEx(feedforwardCoefficients);
-    BasicPID controller = new BasicPID(coefficients);
-    RawValue noFilter = new RawValue(motorPosition);
-    BasicSystem system = new BasicSystem(noFilter,controller,feedforward);
+    public static double kP = 0.0045;
+    public static double kI = 0.085;
+    public static double kD = 0.0003;
+    public static double kF = 0.0;
+
+    AtomicReference<Double> staticError = new AtomicReference<>((double) 0);
+
+    public enum LIFT {
+        START,
+        PRIMED,
+        D1,
+        D2,
+        D3
+    }
+
+    public enum SERVO {
+        START,
+        PRIMED,
+        DROPPED
+    }
+
+    LIFT liftState;
+    SERVO servoState;
+
+    PIDFController pid = new PIDFController(kP, kI, kD,kF);
 
     public Lift(Robot robot) {
+        this.lift = robot.getLiftMotor();
+        this.boxServo = robot.getDropServo();
         this.robot = robot;
-        this.liftMotor = robot.getLiftMotor();
+        liftState = LIFT.START;
+        servoState = SERVO.START;
     }
 
-    public DcMotorEx motor() {
-        return liftMotor;
+    public void drop() {
+        boxServo.setPosition(servoDropped);
     }
 
-    int state = 0;
-    /*
-        0 first quarter
-        1 2&3 quarter
-        2 last quarter
-        3 super close
-     */
-    public void setPosition(double position) {
-        error = (position - liftMotor.getCurrentPosition());
-        if(Math.abs(error) >= position*(3.0/4.0)) {
-            state = 0;
-        }
-        if(Math.abs(error) > position/4 && Math.abs(error) < position*(3.0/4.0)) {
-            state = 1;
-        }
-        else if(Math.abs(error) <= position/4 && Math.abs(error) >= position/15) {
-            state = 2;
-        }
-        else if(Math.abs(error) <= position/15) {
-            state = 3;
-        }
-
-        double angle = robot.lift.tickToRadians(position) + Math.toRadians(44.3);
-        double output = -controller.calculate(position, liftMotor.getCurrentPosition());
-
-
-        switch (state) {
-            case 0:
-                liftMotor.setPower(output * slowStart);
-                break;
-            case 1:
-                liftMotor.setPower(output * maxMed);
-                break;
-            case 2:
-                liftMotor.setPower(output * slowEnd);
-                break;
-            case 3:
-                liftMotor.setPower(output * slowEnd);
-                break;
-        }
-
+    public void primeServo() {
+        boxServo.setPosition(servoPrimed);
     }
 
-    public int getState() {
-        return state;
+    public void drivingServo() {
+        boxServo.setPosition(servoDriving);
     }
 
-    public void setPositionTrap(double position) {
-        double cVelocity = liftMotor.getVelocity();
-        double cTime = System.currentTimeMillis();
+    public void startServo() {
+        boxServo.setPosition(servoStart);
+    }
 
-        error = (position - liftMotor.getCurrentPosition());
+    public void superDrop() {
+        boxServo.setPosition(servoSuperDrop);
+    }
 
-        double dMult = 1.0;
+    public void setPosition(double position) throws InterruptedException {
+        setRawPosition(position);
+    }
 
-        if(error < 0) dMult = -1.0;
-        else dMult = 1.0;
+    public void setStinkyRawPosition(double position, double min, double max, double tolerance) throws InterruptedException {
+        // TODO: RAMP UP
 
-        if (MAX_VELO > Math.abs(cVelocity)) {
-            oVelocity = cVelocity + dMult * MAX_ACCEL * (cTime - pTime);
-            oAcceleration = MAX_ACCEL;
+        init(()-> {
+            staticError.set(position - lift.getCurrentPosition());
+        });
+
+        double error = position - lift.getCurrentPosition();
+
+        double rampDownPosition = staticError.get() * 0.5;
+
+        if(error < rampDownPosition) {
+            power = min;
         }
         else {
-            oVelocity = MAX_VELO;
-            oAcceleration = 0;
+            power = max;
         }
 
-        if(error > error/2) {
-            oVelocity = MAX_VELO/ (1 - (1/error));
-            oAcceleration = -MAX_ACCEL;
+        if(position - lift.getCurrentPosition() > 0 && Math.abs(lift.getCurrentPosition() - position) > threshold) {
+            //lift.setPower(-power);
         }
-
-        liftMotor.setPower(0);
-
-        pTime = cTime;
+        else if(position - lift.getCurrentPosition() < 0 && Math.abs(lift.getCurrentPosition() - position) > threshold) {
+            //lift.setPower(power);
+        }
+        else {
+            //lift.setPower(0.0);
+        }
     }
 
-    public void setVelocity(double velocity) {
-        liftMotor.setVelocity(velocity);
+    public void setRawPosition(double position) {
+        //pid.setPIDF(kP, kI, kD,kF); // For testing
+        lift.setPower(-pid.calculate(lift.getCurrentPosition(), position));
+
     }
 
-    public double tickToRadians(double ticks) {
-        return (Math.PI * 2.0/537.6) * (ticks);
+    public void SyncSetPosition(double position) throws InterruptedException {
+        while(Math.abs(lift.getCurrentPosition() - position) > threshold) {
+            setPosition(position);
+        }
+        lift.setPower(0.0);
     }
 
+    public boolean isDown() {
+        return lift.getCurrentPosition() < 150;
+    }
 
+    public void prime() throws InterruptedException {
+        if (liftState == LIFT.START) {
+            setPosition(liftPrimed);
+            if (Math.abs(lift.getCurrentPosition() - liftPrimed) < threshold) {
+                boxServo.setPosition(servoPrimed);
+                liftState = LIFT.PRIMED;
+            }
+        } else {
+            setPosition(liftPrimed);
+            boxServo.setPosition(servoPrimed);
+            if(Math.abs(lift.getCurrentPosition() - liftPrimed) < threshold) liftState = LIFT.PRIMED;
+        }
+    }
+    public void retract() throws InterruptedException {
+        switch (liftState) {
+            case START:
+                break;
+            case PRIMED:
+                boxServo.setPosition(servoStart);
+                setPosition(liftStart);
+            default:
+                boxServo.setPosition(servoStart);
+                setPosition(liftStart);
+        }
+    }
 
+    public void prime(LIFT state) {
+        Thread t1 = new Thread(()-> {
+            switch(state) {
+                case D1:
+                    try {
+                        setOne();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    boxServo.setPosition(servoPrimed);
+                    break;
 
+                case D2:
+                    try {
+                        setTwo();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    boxServo.setPosition(servoPrimed);
+                    break;
+
+                case D3:
+                    try {
+                        setThree();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    boxServo.setPosition(servoPrimed);
+                    break;
+            }
+        });
+    }
+
+    public void setOne() throws InterruptedException {
+        //while(Math.abs(lift.getCurrentPosition() - liftOne) > threshold) {
+        setPosition(liftOne);
+        //}
+    }
+
+    public void setTwo() throws InterruptedException {
+        //while(Math.abs(lift.getCurrentPosition() - liftTwo) > threshold) {
+        setPosition(liftTwo);
+        //}
+    }
+
+    public void setThree() throws InterruptedException {
+        //while(Math.abs(lift.getCurrentPosition() - liftThree) > threshold) {
+        setPosition(liftThree);
+        //}
+    }
+
+    public void setStart() throws InterruptedException {
+        //while(Math.abs(lift.getCurrentPosition() - liftStart) > threshold) {
+        setPosition(liftStart);
+        //}
+    }
 }

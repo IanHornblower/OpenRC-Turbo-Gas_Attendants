@@ -26,7 +26,7 @@ public class LocalizationTest extends LinearOpMode {
         Robot robot = new Robot(hardwareMap);
 
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        drive.setPoseEstimate(WarehouseCycleAuto.RedConstants.START_POSITION);
+        drive.setPoseEstimate(new Pose2d(0, 0, Math.toRadians(0)));
 
         waitForStart();
 

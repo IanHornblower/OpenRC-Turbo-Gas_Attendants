@@ -3,11 +3,11 @@ package org.firstinspires.ftc.teamcode.opmodes.AutoConstants;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 
 public class WarehouseCycleAuto {
+
     public static class RedConstants {
         /*
             Start
          */
-        public static Pose2d START_POSITION = new Pose2d(9, -65, Math.toRadians(0));
         public static Pose2d ALT_START_POSITION = new Pose2d(9, -63, Math.toRadians(270));
 
         /*
@@ -33,4 +33,5 @@ public class WarehouseCycleAuto {
     public static class BlueConstants {
 
     }
+
 }

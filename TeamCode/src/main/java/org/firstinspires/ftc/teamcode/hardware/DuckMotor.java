@@ -16,7 +16,7 @@ public class DuckMotor {
     DcMotorEx motor;
     ElapsedTime timer;
 
-    public static double START_VELOCITY = 100;
+    public static double START_VELOCITY = 150;
     public static double MID_VELOCITY = 180;
     public static double END_VELOCITY = 350;
 

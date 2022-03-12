@@ -95,5 +95,3 @@ public class Intake {
         robot.getIntakeServo().setPosition(DOWN);
     }
 }
-
-    // Feedback - Color Sensor
