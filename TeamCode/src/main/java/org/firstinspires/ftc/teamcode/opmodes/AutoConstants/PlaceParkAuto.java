@@ -40,8 +40,8 @@ public class PlaceParkAuto {
             Warehouse stuff
          */
         public static Pose2d OUTSIDE_WAREHOUSE = new Pose2d(10, 64.7, Math.toRadians(0));
-        public static Pose2d INSIDE_WAREHOUSE = new Pose2d(45, 64.7, Math.toRadians(0));
-        public static Pose2d PARKED_WAREHOUSE = new Pose2d(45, 40, Math.toRadians(90));
+        public static Pose2d INSIDE_WAREHOUSE = new Pose2d(48, 64.7, Math.toRadians(0));
+        public static Pose2d PARKED_WAREHOUSE = new Pose2d(48, 40, Math.toRadians(90));
     }
 
 }

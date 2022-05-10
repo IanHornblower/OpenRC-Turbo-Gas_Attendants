@@ -23,7 +23,7 @@ import org.firstinspires.ftc.teamcode.util.Timer;
 public class TeleOperation extends LinearOpMode {
 
     public static double liftPosition = 0;
-    public static double duckVelocity = 260;
+    public static double duckVelocity = 220;
     public static double capperPosition = 0;
 
     public static double grabber_open = 0.45;
@@ -42,6 +42,7 @@ public class TeleOperation extends LinearOpMode {
         robot.operatorController.setGamepad(gamepad2);
 
         robot.operatorController.leftJoystick.invert(Joystick.AXIS.y);
+        robot.freightDetector.run();
 
         int sideMult = 1;
 
@@ -120,11 +121,11 @@ public class TeleOperation extends LinearOpMode {
             double turn =  -robot.driveController.rightJoystick.x()*0.8;
 
             if(robot.driveController.leftTrigger.isPressed()) {
-                leftY += 0.5*sideMult;
+                leftX += 0.5*sideMult;
             }
 
             if(robot.driveController.rightTrigger.isPressed()) {
-                leftY -= 0.5*sideMult;
+                leftX-= 0.5*sideMult;
             }
 
             robot.driveTrain.setWeightedDrivePower(new Pose2d(
@@ -251,7 +252,7 @@ public class TeleOperation extends LinearOpMode {
             }
 
             if(robot.operatorController.cross()) {
-                robot.spinMotor.doDuckSpin();
+                robot.lift.superDrop();
             }
 
             if(robot.operatorController.leftJoystick.isPressed()) {
